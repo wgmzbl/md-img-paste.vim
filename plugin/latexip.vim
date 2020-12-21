@@ -110,7 +110,7 @@ function! InputName()
     return name
 endfunction
 
-function! mdip#LatexClipboardImage()
+function! latexip#LatexClipboardImage()
     " detect os: https://vi.stackexchange.com/questions/2572/detect-os-in-vimscript
     let s:os = "Windows"
     if !(has("win64") || has("win32") || has("win16"))

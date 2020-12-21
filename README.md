@@ -1,4 +1,4 @@
-# md-img-paste.vim
+# Latex-img-paste.vim
 Yet simple tool to paste images into markdown files
 
 ## Use Case
@@ -10,13 +10,13 @@ By default, the location of the saved file (`img/image1.png`) and the in-text re
 
 Using Vundle
 ```
-Plugin 'ferrine/md-img-paste.vim'
+Plugin 'wgmzbl/md-img-paste.vim'
 ```
 
 ## Usage
 Add to .vimrc
 ```
-autocmd FileType markdown nmap <buffer><silent> <leader>p :call mdip#LatexClipboardImage()<CR>
+autocmd FileType latex,tex nmap <buffer><silent> <leader>p :call mdip#LatexClipboardImage()<CR>
 " there are some defaults for image directory and image name, you can change them
 " let g:mdip_imgdir = 'img'
 " let g:mdip_imgname = 'image'

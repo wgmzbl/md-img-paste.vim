@@ -59,6 +59,25 @@ function! SaveFileTMPMacOS(imgdir, tmpname) abort
     endif
 endfunction
 
+function! SaveFileSVGMacOS(imgdir, tmpname) abort
+    let tmpfile = a:imgdir . '/' . a:timpname . '.svg'
+    let result = 0
+
+python << EOF
+import clipboard
+import vim
+text = clipboard.paste()
+if "<svg" in text:
+    myFile = open(tmpfile, 'w')
+    myFile.write(text)
+    myFile.close()
+elif:
+    vim.command("let result = 1")
+EOF
+    echo result
+    return result
+endfunction
+
 function! SaveFileTMP(imgdir, tmpname)
     if s:os == "Darwin"
         return SaveFileTMPMacOS(a:imgdir, a:tmpname)
@@ -124,6 +143,11 @@ function! latexip#LatexClipboardImage()
       let g:mdip_tmpname = RandomName()
     endif
 
+    let tmpfile = SaveFileSVGMacOS(workdir, g:mdip_tmpname)
+    if tmpfile == 0
+        echo "svg_files"
+        return
+    endif
     let tmpfile = SaveFileTMP(workdir, g:mdip_tmpname)
     if tmpfile == 1
         return

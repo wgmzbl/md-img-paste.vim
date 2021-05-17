@@ -129,6 +129,13 @@ function! InputName()
     return name
 endfunction
 
+function! Change_to_subfigure()
+	if(match(getline('.'), '\(\\incfig\|\\includegraphics\)')!=-1)
+		execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=-\\.]*\]\)*{\([0-9a-zA-Z-]*\)}/\1\\begin{subfigure}\[b\]{.5\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
+	endif
+    return 1
+endfunction
+
 function! latexip#LatexClipboardImage()
     " detect os: https://vi.stackexchange.com/questions/2572/detect-os-in-vimscript
     let s:os = "Windows"
@@ -164,9 +171,9 @@ function! latexip#LatexClipboardImage()
     
     let figure_title = "{figure}[ht]\n"
     let figure_title_end = "{figure}"
-    Change_to_subfigure()
+    let res = Change_to_subfigure()
     if(mattch(getline('.'), '\\end{subfigure}')!=-1)
-        let figure_title = "{subfigure}[b]{.5\\textwidth}\n"
+        let figure_title = "{subfigure}[b]{.48\\textwidth}\n"
         let figure_title_end = "{subfigure}"
     endif
 
@@ -181,11 +188,7 @@ function! latexip#LatexClipboardImage()
     execute "normal! i" . ret
 endfunction
 
-function! Change_to_subfigure()
-	if(match(getline('.'), '\(\\incfig\|\\includegraphics\)')!=-1)
-		execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=-\\.]*\]\)*{\([0-9a-zA-Z-]*\)}/\1\\begin{subfigure}\[b\]{.5\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
-	endif
-endfunction
+
 
 if !exists('g:mdip_imgdir')
     let g:mdip_imgdir = 'img'

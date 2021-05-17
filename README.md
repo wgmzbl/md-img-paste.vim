@@ -9,6 +9,7 @@ By default, the location of the saved file (`img/image1.png`) and the in-text re
 ## Installation
 
 Using Vundle
+
 ```
 Plugin 'wgmzbl/md-img-paste.vim'
 ```

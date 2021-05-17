@@ -60,21 +60,21 @@ function! SaveFileTMPMacOS(imgdir, tmpname) abort
 endfunction
 
 function! SaveFileSVGMacOS(imgdir, tmpname) abort
-    let tmpfile = a:imgdir . '/' . a:timpname . '.svg'
+    let tmpfile = a:imgdir . '/' . a:tmpname . '.svg'
     let result = 0
 
-python << EOF
+python3 << EOF
 import clipboard
 import vim
 text = clipboard.paste()
+path = vim.eval("tmpfile")
 if "<svg" in text:
-    myFile = open(tmpfile, 'w')
+    myFile = open(path, 'w')
     myFile.write(text)
     myFile.close()
-elif:
+else:
     vim.command("let result = 1")
 EOF
-    echo result
     return result
 endfunction
 
@@ -145,19 +145,46 @@ function! latexip#LatexClipboardImage()
 
     let tmpfile = SaveFileSVGMacOS(workdir, g:mdip_tmpname)
     if tmpfile == 0
-        echo "svg_files"
-        return
-    endif
-    let tmpfile = SaveFileTMP(workdir, g:mdip_tmpname)
-    if tmpfile == 1
-        return
+        " svg image
+        let texText = "\\incfig[0.8]{"
+        let extension = "svg"
+        let relpath = g:mdip_tmpname
     else
-        " let relpath = SaveNewFile(g:mdip_imgdir, tmpfile)
-        let extension = split(tmpfile, '\.')[-1]
-        let relpath = g:mdip_imgdir . '/' . g:mdip_tmpname . '.' . extension
-	let ret = "\\begin{figure}[ht]\n\\centering\n\\includegraphics[width=0.8\\textwidth]{". relpath . "}\n\\caption{" . g:mdip_tmpname . "}\n\\label{fig:" . g:mdip_tmpname . "}\n\\end{figure}"
-        execute "normal! i" . ret
+        let tmpfile = SaveFileTMP(workdir, g:mdip_tmpname)
+        if tmpfile == 1
+            return
+        else
+            let texText = "\\includegraphics[width=0.8\\textwidth]{"
+            let extension = "png"
+            let relpath = g:mdip_imgdir . '/' . g:mdip_tmpname . '.' . extension
+        endif
     endif
+    " let relpath = SaveNewFile(g:mdip_imgdir, tmpfile)
+    " let extension = split(tmpfile, '\.')[-1]
+    
+    let figure_title = "{figure}[ht]\n"
+    let figure_title_end = "{figure}"
+    Change_to_subfigure()
+    if(mattch(getline('.'), '\\end{subfigure}')!=-1)
+        let figure_title = "{subfigure}[b]{.5\\textwidth}\n"
+        let figure_title_end = "{subfigure}"
+    endif
+
+    
+
+    let ret = "\\begin".figure_title
+    let ret = ret . "\\centering\n"
+    let ret = ret . texText . relpath . "}\n"
+    let ret = ret . "\\caption{" . g:mdip_tmpname . "}\n"
+    let ret = ret . "\\label{fig:" . g:mdip_tmpname . "}\n"
+    let ret = ret . "\\end".figure_title_end
+    execute "normal! i" . ret
+endfunction
+
+function! Change_to_subfigure()
+	if(match(getline('.'), '\(\\incfig\|\\includegraphics\)')!=-1)
+		execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=-\\.]*\]\)*{\([0-9a-zA-Z-]*\)}/\1\\begin{subfigure}\[b\]{.5\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
+	endif
 endfunction
 
 if !exists('g:mdip_imgdir')

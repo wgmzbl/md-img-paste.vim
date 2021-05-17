@@ -173,6 +173,7 @@ function! latexip#LatexClipboardImage()
     let figure_title_end = "{figure}"
     let res = Change_to_subfigure()
     if(match(getline('.'), '\\end{subfigure}')!=-1)
+    
         let figure_title = "{subfigure}[b]{.48\\textwidth}\n"
         let figure_title_end = "{subfigure}"
     endif

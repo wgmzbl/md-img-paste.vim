@@ -185,7 +185,7 @@ function! latexip#LatexClipboardImage()
     let ret = ret . "\\caption{" . g:mdip_tmpname . "}\n"
     let ret = ret . "\\label{fig:" . g:mdip_tmpname . "}\n"
     let ret = ret . "\\end".figure_title_end
-    execute "normal! i" . ret
+    execute "normal! o" . ret
 endfunction
 
 

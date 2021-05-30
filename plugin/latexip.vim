@@ -178,8 +178,6 @@ function! latexip#LatexClipboardImage()
         let figure_title_end = "{subfigure}"
     endif
 
-    
-
     let ret = "\\begin".figure_title
     let ret = ret . "\\centering\n"
     let ret = ret . texText . relpath . "}\n"
@@ -192,7 +190,7 @@ endfunction
 
 
 if !exists('g:mdip_imgdir')
-    let g:mdip_imgdir = 'img'
+    let g:mdip_imgdir = 'figures'
 endif
 if !exists('g:mdip_tmpname')
     let g:mdip_tmpname = 'tmp'

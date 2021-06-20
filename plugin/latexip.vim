@@ -131,7 +131,7 @@ endfunction
 
 function! Change_to_subfigure()
 	if(match(getline('.'), '\(\\incfig\|\\includegraphics\)')!=-1)
-		execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=_\\.-]*\]\)*{\([0-9a-zA-Z-]*\)}/\1\\begin{subfigure}\[b\]{.5\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
+		execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=_\\.-]*\]\)*{\([0-9a-zA-Z-\/.]*\)}/\1\\begin{subfigure}\[b\]{.5\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
         return 1
 	endif
     return 0

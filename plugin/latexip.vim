@@ -61,8 +61,8 @@ endfunction
 
 function! SaveFileSVGMacOS(imgdir, tmpname) abort
     let tmpfile = a:imgdir . '/' . a:tmpname . '.svg'
-    let result = 0
-
+    let result = 1
+" Using Python to save svg. If success, return 1.
 python3 << EOF
 import clipboard
 import vim
@@ -72,8 +72,7 @@ if "<svg" in text:
     myFile = open(path, 'w')
     myFile.write(text)
     myFile.close()
-else:
-    vim.command("let result = 1")
+    vim.command("let result = 0")
 EOF
     return result
 endfunction
@@ -130,10 +129,14 @@ function! InputName()
 endfunction
 
 function! Change_to_subfigure()
-	if(match(getline('.'), '\(\\incfig\|\\includegraphics\)')!=-1)
-		execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=_\\.-]*\]\)*{\([0-9a-zA-Z-]*\)}/\1\\begin{subfigure}\[b\]{.5\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
+	let [bufnum, cur_l, cur_c, vr] = getpos('.')
+	let [start_l,start_c] = searchpairpos('\\begin{figure}','','\\end{figure}','bW')
+	let [mid_l, mid_c] = searchpairpos('\\begin{figure}','\(\\incfig\|\\includegraphics\)','\\end{figure}','W')
+	if(match(getline('.'),'\(\\incfig\|\\includegraphics\)')!=-1)
+		execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=-\\.]*\]\)*{\([0-9a-zA-Z-\/.]*\)}/\1\\begin{subfigure}\[b\]{.48\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
         return 1
 	endif
+	call cursor(cur_l-1,cur_c-1)
     return 0
 endfunction
 
@@ -150,35 +153,41 @@ function! latexip#LatexClipboardImage()
     if empty(g:mdip_tmpname)
       let g:mdip_tmpname = RandomName()
     endif
+    let save_name = substitute(g:mdip_tmpname, ' ', '_', 'g')
 
-    let tmpfile = SaveFileSVGMacOS(workdir, g:mdip_tmpname)
+
+    let tmpfile = SaveFileSVGMacOS(workdir, save_name)
     if tmpfile == 0
         " svg image
         let texText = "\\incfig[0.8]{"
         let extension = "svg"
-        let relpath = g:mdip_tmpname
+        let relpath = save_name
     else
-        let tmpfile = SaveFileTMP(workdir, g:mdip_tmpname)
+        let tmpfile = SaveFileTMP(workdir, save_name)
         if tmpfile == 1
             return
         else
             let texText = "\\includegraphics[width=0.8\\textwidth]{"
             let extension = "png"
-            let relpath = g:mdip_imgdir . '/' . g:mdip_tmpname . '.' . extension
+            let relpath = g:mdip_imgdir . '/' . save_name . '.' . extension
         endif
     endif
-    " let relpath = SaveNewFile(g:mdip_imgdir, tmpfile)
-    " let extension = split(tmpfile, '\.')[-1]
     
     let figure_title = "{figure}[ht]\n"
     let figure_title_end = "{figure}"
     let res = Change_to_subfigure()
+
+    " To the begining of env
+	let [start_l,start_c] = searchpairpos('\\begin{figure}','','\\end{figure}','bW')
+	let [mid_l, mid_c] = searchpairpos('\\begin{figure}','\\end{subfigure}','\\end{figure}','W')
+
     if(match(getline('.'), "\\end{subfigure}")!=-1 or res == 1)
         let figure_title = "{subfigure}[b]{.48\\textwidth}\n"
         let figure_title_end = "{subfigure}"
     endif
 
-    
+    let match_res = matchlist(getline('.'), '\(\s*\)[^\s]')
+    let space_str = match_res[1]
 
     let ret = "\\begin".figure_title
     let ret = ret . "\\centering\n"
@@ -192,7 +201,7 @@ endfunction
 
 
 if !exists('g:mdip_imgdir')
-    let g:mdip_imgdir = 'img'
+    let g:mdip_imgdir = 'figures'
 endif
 if !exists('g:mdip_tmpname')
     let g:mdip_tmpname = 'tmp'

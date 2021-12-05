@@ -130,15 +130,42 @@ function! InputName()
     return name
 endfunction
 
-function! Change_to_subfigure()
-	let [bufnum, cur_l, cur_c, vr] = getpos('.')
+function! ChangeToSubfigure()
 	let [start_l,start_c] = searchpairpos('\\begin{figure}','','\\end{figure}','bW')
-	let [mid_l, mid_c] = searchpairpos('\\begin{figure}','\(\\incfig\|\\includegraphics\)','\\end{figure}','W')
-	if(match(getline('.'),'\(\\incfig\|\\includegraphics\)')!=-1)
-		execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=-\\.]*\]\)*{\([0-9a-zA-Z-\/.]*\)}/\1\\begin{subfigure}\[b\]{.48\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
-        return 1
+	let [mid_l, mid_c] = searchpairpos('\\begin{\(sub\|\)figure}','\(\\incfig\|\\includegraphics\)','\\end{\(sub\|\)figure}','W')
+    if mid_l>0
+        if(match(getline('.'),'\(\\incfig\|\\includegraphics\)')!=-1)
+            execute 's/\(\s*\)\(\\includegraphics\|\\incfig\)\(\[[0-9a-zA-Z=-\\.]*\]\)*{\([0-9a-zA-Z-\/.]*\)}/\1\\begin{subfigure}\[b\]{.48\\linewidth}\r\1\t\\centering\r\1\t\2\3{\4}\r\1\t\\caption{\4}\r\1\t\\label{fig:\4}\r\1\\end{subfigure}/'
+            call searchpairpos('\\begin{subfigure}', '', '\\end{subfigure}','W')
+            call cursor(line('.')-1,1)
+            return 1
+        endif
 	endif
-	call cursor(cur_l-1,cur_c-1)
+    return 0
+endfunction
+
+function! Find_Sub_Env()
+    " check if in subfigure env. If so, insert after this env
+    let [end_l, end_c] = searchpairpos('\\begin{subfigure}','','\\end{subfigure}','W')
+    if end_l>0
+        return 1
+    endif
+
+    " check if has subfigure before
+	let [mid_l, mid_c] = searchpairpos('\\begin{figure}','\\end{subfigure}','\\end{figure}','bW')
+    if mid_l >0
+        if match(getline('.'), '\\end{subfigure}') > -1
+            return 1
+        endif
+    endif
+    
+    " check if has subfigure after
+	let [mid_l, mid_c] = searchpairpos('\\begin{figure}','\\end{subfigure}','\\end{figure}','nW')
+    if mid_l >0
+        if match(getline(mid_l), '\\end{subfigure}') > -1
+            return 2       
+        endif
+    endif
     return 0
 endfunction
 
@@ -175,29 +202,47 @@ function! latexip#LatexClipboardImage()
         endif
     endif
     
-    let figure_title = "{figure}[ht]\n"
+    let figure_title = "{figure}[ht]"
     let figure_title_end = "{figure}"
-    let res = Change_to_subfigure()
 
-    " To the begining of env
-	let [start_l,start_c] = searchpairpos('\\begin{figure}','','\\end{figure}','bW')
-	let [mid_l, mid_c] = searchpairpos('\\begin{figure}','\\end{subfigure}','\\end{figure}','W')
+    " Remember cursor location
+	let [bufnum, cur_l, cur_c, vr] = getpos('.')
+    let res = ChangeToSubfigure()
 
-    if(match(getline('.'), "\\end{subfigure}")!=-1 or res == 1)
-        let figure_title = "{subfigure}[b]{.48\\textwidth}\n"
-        let figure_title_end = "{subfigure}"
+    " Restore location
+    " call append(cur_l-1,'abc')
+    if res == 0
+        call cursor(cur_l,cur_c)
     endif
 
-    let match_res = matchlist(getline('.'), '\(\s*\)[^\s]')
-    let space_str = match_res[1]
+    let has_sub_env = Find_Sub_Env()
+    " call append(cur_l, has_sub_env)
+    if has_sub_env==2
+        call cursor(cur_l,cur_c)
+    endif
+    if has_sub_env>0
+        let figure_title = "{subfigure}[b]{.48\\textwidth}"
+        let figure_title_end = "{subfigure}"
+    else
+        call cursor(cur_l,cur_c)
+    endif
 
-    let ret = "\\begin".figure_title
-    let ret = ret . "\\centering\n"
-    let ret = ret . texText . relpath . "}\n"
-    let ret = ret . "\\caption{" . g:mdip_tmpname . "}\n"
-    let ret = ret . "\\label{fig:" . save_name . "}\n"
-    let ret = ret . "\\end".figure_title_end
-    execute "normal! o" . ret
+    let match_res = matchlist(getline('.'), '\(\s*\)')
+    let space_str = match_res[1]
+"
+"    let ret = "\\begin".figure_title
+"    let ret = ret . space_str . '\t' . "\\centering\n"
+"    let ret = ret . space_str . '\t' . texText . relpath . "}\n"
+"    let ret = ret . space_str . '\t' . "\\caption{" . g:mdip_tmpname . "}\n"
+"    let ret = ret . space_str . '\t' . "\\label{fig:" . save_name . "}\n"
+"    let ret = ret . space_str . "\\end".figure_title_end
+    call append(line('.'), space_str . "\\end".figure_title_end)
+    call append(line('.'), space_str . "\t" . "\\label{fig:" . save_name . "}")
+    call append(line('.'), space_str . "\t" . "\\caption{" . g:mdip_tmpname . "}")
+    call append(line('.'), space_str . "\t" . texText . relpath . "}")
+    call append(line('.'), space_str . "\t" . "\\centering")
+    call append(line('.'), space_str . "\\begin".figure_title)
+    "execute "normal! o" . ret
 endfunction
 
 

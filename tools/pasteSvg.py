@@ -1,11 +1,8 @@
 import clipboard
-import sys
-
+from collections.abc import Iterable
 text = clipboard.paste()
-print(sys.argv[1])
-if "<svg" in text:
-    myFile = open(sys.argv[1], 'w')
-    myFile.write(text)
-    myFile.close()
-    print('done')
+if isinstance(text,Iterable):
+    print('start')
+    if "<svg" in text:
+        print('done')
 

@@ -65,14 +65,16 @@ function! SaveFileSVGMacOS(imgdir, tmpname) abort
 " Using Python to save svg. If success, return 1.
 python3 << EOF
 import clipboard
+from collections.abc import Iterable
 import vim
 text = clipboard.paste()
 path = vim.eval("tmpfile")
-if "<svg" in text:
-    myFile = open(path, 'w')
-    myFile.write(text)
-    myFile.close()
-    vim.command("let result = 0")
+if isinstance(text,Iterable):
+    if "<svg" in text:
+        myFile = open(path, 'w')
+        myFile.write(text)
+        myFile.close()
+        vim.command("let result = 0")
 EOF
     return result
 endfunction
@@ -193,7 +195,7 @@ function! latexip#LatexClipboardImage()
     let ret = ret . "\\centering\n"
     let ret = ret . texText . relpath . "}\n"
     let ret = ret . "\\caption{" . g:mdip_tmpname . "}\n"
-    let ret = ret . "\\label{fig:" . g:mdip_tmpname . "}\n"
+    let ret = ret . "\\label{fig:" . save_name . "}\n"
     let ret = ret . "\\end".figure_title_end
     execute "normal! o" . ret
 endfunction

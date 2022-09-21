@@ -196,7 +196,7 @@ function! latexip#LatexClipboardImage()
         if tmpfile == 1
             return
         else
-            let texText = "\\includegraphics[width=0.8\\textwidth]{"
+            let texText = "\\includegraphics[width=1\\textwidth]{"
             let extension = "png"
             let relpath = g:mdip_imgdir . '/' . save_name . '.' . extension
         endif
